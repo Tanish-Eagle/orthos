@@ -1,5 +1,5 @@
 import sys
-from io import read_file, write_file
+from fileio import read_file, write_file
 from editor import interactive_edit
 
 

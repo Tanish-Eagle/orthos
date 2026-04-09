@@ -19,7 +19,18 @@ def interactive_edit(text):
         error_text = text[start:end]
 
         print("\n--- Issue Found ---")
-        print("Error:", error_text)
+
+        # Context display
+        context = match["context"]["text"]
+        context_offset = match["context"]["offset"]
+        context_length = match["context"]["length"]
+
+        print(context)
+
+        pointer = " " * context_offset + "^" * context_length
+        print(pointer)
+
+        print("\nError:", error_text)
         print("Message:", match["message"])
 
         suggestions = [r["value"] for r in match["replacements"]]
