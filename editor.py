@@ -15,7 +15,7 @@ def interactive_edit(text):
 
     ignored_rules = set()
     custom_words = load_dictionary()
-    skipped_ranges = set()  # NEW
+    skipped_ranges = set()
 
     while True:
         matches = checker.check(text)
@@ -23,7 +23,7 @@ def interactive_edit(text):
         # Filter ignored rules
         matches = [m for m in matches if m["rule"]["id"] not in ignored_rules]
 
-        # Filter skipped matches (NEW)
+        # Filter skipped matches
         matches = [
             m for m in matches
             if (m["offset"], m["offset"] + m["length"], m["rule"]["id"]) not in skipped_ranges
@@ -47,92 +47,93 @@ def interactive_edit(text):
             print("\nNo more issues found.")
             return text
 
-        match = matches[0]
+        index = 0  # NEW: iterate through all matches
 
-        start = match["offset"]
-        end = start + match["length"]
+        while index < len(matches):
+            match = matches[index]
 
-        error_text = text[start:end]
+            start = match["offset"]
+            end = start + match["length"]
 
-        print("\n--- Issue Found ---")
+            error_text = text[start:end]
 
-        # Context display
-        context = match["context"]["text"]
-        context_offset = match["context"]["offset"]
-        context_length = match["context"]["length"]
+            print("\n--- Issue Found ---")
 
-        print(context)
+            # Context display
+            context = match["context"]["text"]
+            context_offset = match["context"]["offset"]
+            context_length = match["context"]["length"]
 
-        pointer = " " * context_offset + "^" * context_length
-        print(pointer)
+            print(context)
+            print(" " * context_offset + "^" * context_length)
 
-        print("\nError:", error_text)
-        print("Message:", match["message"])
+            print("\nError:", error_text)
+            print("Message:", match["message"])
 
-        rule_id = match["rule"]["id"]
-        print("Rule:", rule_id)
+            rule_id = match["rule"]["id"]
+            print("Rule:", rule_id)
 
-        suggestions = [r["value"] for r in match["replacements"]]
+            suggestions = [r["value"] for r in match["replacements"]]
 
-        if suggestions:
-            print("\nSuggestions:")
-            for i, s in enumerate(suggestions, 1):
-                print(f"{i}. {s}")
-        else:
-            print("\n(No suggestions available)")
-
-        print("\nOptions:")
-        print("number = apply suggestion")
-        print("s = skip")
-        print("e = edit manually")
-        print("i = ignore this rule")
-        print("w = add word to dictionary")
-        print("q = quit")
-
-        choice = input("> ").strip()
-
-        if choice == "q":
-            return text
-
-        elif choice == "i":
-            ignored_rules.add(rule_id)
-            print(f"Rule {rule_id} ignored for this session.")
-            continue
-
-        elif choice == "w":
-            word = error_text.strip()
-            word_lower = word.lower()
-
-            if word_lower not in custom_words:
-                custom_words.add(word_lower)
-
-                with open("orthos_words.txt", "a", encoding="utf-8") as f:
-                    f.write(word_lower + "\n")
-
-                print(f'Word "{word}" added to dictionary.')
+            if suggestions:
+                print("\nSuggestions:")
+                for i, s in enumerate(suggestions, 1):
+                    print(f"{i}. {s}")
             else:
-                print(f'Word "{word}" is already in dictionary.')
+                print("\n(No suggestions available)")
 
-            continue
+            print("\nOptions:")
+            print("number = apply suggestion")
+            print("s = skip")
+            print("e = edit manually")
+            print("i = ignore this rule")
+            print("w = add word to dictionary")
+            print("q = quit")
 
-        elif choice == "s":
-            # NEW: non-destructive skip
-            skipped_ranges.add((start, end, rule_id))
-            print("Issue skipped.")
-            continue
+            choice = input("> ").strip()
 
-        elif choice == "e":
-            replacement = input("Enter replacement: ")
-            text = text[:start] + replacement + text[end:]
-            continue
+            if choice == "q":
+                return text
 
-        elif choice.isdigit():
-            index = int(choice) - 1
-            if 0 <= index < len(suggestions):
-                replacement = suggestions[index]
+            elif choice == "i":
+                ignored_rules.add(rule_id)
+                print(f"Rule {rule_id} ignored for this session.")
+                index += 1
+
+            elif choice == "w":
+                word = error_text.strip()
+                word_lower = word.lower()
+
+                if word_lower not in custom_words:
+                    custom_words.add(word_lower)
+
+                    with open("orthos_words.txt", "a", encoding="utf-8") as f:
+                        f.write(word_lower + "\n")
+
+                    print(f'Word "{word}" added to dictionary.')
+                else:
+                    print(f'Word "{word}" is already in dictionary.')
+
+                index += 1
+
+            elif choice == "s":
+                skipped_ranges.add((start, end, rule_id))
+                print("Issue skipped.")
+                index += 1
+
+            elif choice == "e":
+                replacement = input("Enter replacement: ")
                 text = text[:start] + replacement + text[end:]
-            else:
-                print("Invalid suggestion number.")
+                break  # restart full check after modification
 
-        else:
-            print("Invalid choice.")
+            elif choice.isdigit():
+                idx = int(choice) - 1
+                if 0 <= idx < len(suggestions):
+                    replacement = suggestions[idx]
+                    text = text[:start] + replacement + text[end:]
+                    break  # restart full check after modification
+                else:
+                    print("Invalid suggestion number.")
+
+            else:
+                print("Invalid choice.")
