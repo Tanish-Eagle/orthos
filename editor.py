@@ -15,12 +15,19 @@ def interactive_edit(text):
 
     ignored_rules = set()
     custom_words = load_dictionary()
+    skipped_ranges = set()  # NEW
 
     while True:
         matches = checker.check(text)
 
         # Filter ignored rules
         matches = [m for m in matches if m["rule"]["id"] not in ignored_rules]
+
+        # Filter skipped matches (NEW)
+        matches = [
+            m for m in matches
+            if (m["offset"], m["offset"] + m["length"], m["rule"]["id"]) not in skipped_ranges
+        ]
 
         # Filter custom dictionary words (ONLY for spelling issues)
         def is_ignored_word(match):
@@ -29,7 +36,6 @@ def interactive_edit(text):
 
             issue_type = match["rule"].get("issueType", "")
 
-            # Only ignore if it's a spelling issue
             if issue_type == "misspelling" and word_lower in custom_words:
                 return True
 
@@ -97,7 +103,6 @@ def interactive_edit(text):
             word = error_text.strip()
             word_lower = word.lower()
 
-            # avoid duplicates
             if word_lower not in custom_words:
                 custom_words.add(word_lower)
 
@@ -111,7 +116,9 @@ def interactive_edit(text):
             continue
 
         elif choice == "s":
-            text = text[:end] + " " + text[end:]
+            # NEW: non-destructive skip
+            skipped_ranges.add((start, end, rule_id))
+            print("Issue skipped.")
             continue
 
         elif choice == "e":
