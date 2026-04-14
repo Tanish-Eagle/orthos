@@ -4,8 +4,13 @@ from checker import LanguageToolChecker
 def interactive_edit(text):
     checker = LanguageToolChecker()
 
+    ignored_rules = set()
+
     while True:
         matches = checker.check(text)
+
+        # Filter ignored rules
+        matches = [m for m in matches if m["rule"]["id"] not in ignored_rules]
 
         if not matches:
             print("\nNo more issues found.")
@@ -33,6 +38,9 @@ def interactive_edit(text):
         print("\nError:", error_text)
         print("Message:", match["message"])
 
+        rule_id = match["rule"]["id"]
+        print("Rule:", rule_id)
+
         suggestions = [r["value"] for r in match["replacements"]]
 
         if suggestions:
@@ -46,6 +54,7 @@ def interactive_edit(text):
         print("number = apply suggestion")
         print("s = skip")
         print("e = edit manually")
+        print("i = ignore this rule")
         print("q = quit")
 
         choice = input("> ").strip()
@@ -53,8 +62,12 @@ def interactive_edit(text):
         if choice == "q":
             return text
 
+        elif choice == "i":
+            ignored_rules.add(rule_id)
+            print(f"Rule {rule_id} ignored for this session.")
+            continue
+
         elif choice == "s":
-            # skip this issue by inserting a space (simple trick)
             text = text[:end] + " " + text[end:]
             continue
 
