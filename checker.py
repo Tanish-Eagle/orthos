@@ -16,6 +16,7 @@ class LanguageToolChecker:
             data={
                 "text": text,
                 "language": self.language,
+                "level": "picky",
             },
         )
 
