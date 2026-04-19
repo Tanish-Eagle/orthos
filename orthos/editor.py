@@ -1,4 +1,4 @@
-from checker import LanguageToolChecker
+from orthos.checker import LanguageToolChecker
 
 
 def load_dictionary(path="orthos_words.txt"):

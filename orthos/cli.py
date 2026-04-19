@@ -1,6 +1,6 @@
 import sys
-from fileio import read_file, write_file
-from editor import interactive_edit
+from orthos.fileio import read_file, write_file
+from orthos.editor import interactive_edit
 
 
 def main():
