@@ -1,0 +1,15 @@
+[project]
+name = "orthos"
+version = "1.0.0"
+description = "A command-line spelling and grammar checker using LanguageTool"
+authors = [
+    { name = "Tanish Shrivastava" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "requests"
+]
+
+[project.scripts]
+orthos = "orthos.cli:main"
