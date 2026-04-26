@@ -17,6 +17,7 @@ class LanguageToolChecker:
                 "text": text,
                 "language": self.language,
                 "level": "picky",
+                "disabledRules": "EN_QUOTES",
             },
         )
 
